@@ -6,6 +6,9 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
 export default function PostForm({ post }) {
+    const [isModalOpen, setModalOpen] = useState(false);
+    const [modalMessage, setModalMessage] = useState('');
+
     const { register, handleSubmit, watch, setValue, control, getValues } = useForm({
         defaultValues: {
             title: post?.title || "",
@@ -17,56 +20,51 @@ export default function PostForm({ post }) {
 
     const navigate = useNavigate();
     const userData = useSelector((state) => state.auth.userData);
-    const [modalMessage, setModalMessage] = useState(""); // State for modal message
-    const [isModalVisible, setModalVisible] = useState(false); // State for modal visibility
-    const [redirectUrl, setRedirectUrl] = useState(""); // State for redirect URL
 
     const submit = async (data) => {
-        let message = "";
-        let urlToNavigate = ""; // Variable to hold the URL for navigation
+        try {
+            if (post) {
+                const file = data.image[0] ? await appwriteService.uploadFile(data.image[0]) : null;
 
-        if (post) {
-            const file = data.image[0] ? await appwriteService.uploadFile(data.image[0]) : null;
+                if (file) {
+                    appwriteService.deleteFile(post.featuredImage);
+                }
 
-            if (file) {
-                appwriteService.deleteFile(post.featuredImage);
-            }
-
-            const dbPost = await appwriteService.updatePost(post.$id, {
-                ...data,
-                featuredImage: file ? file.$id : undefined,
-            });
-
-            if (dbPost) {
-                message = "Post updated successfully!";
-                urlToNavigate = `/post/${dbPost.$id}`;
-            }
-        } else {
-            const file = await appwriteService.uploadFile(data.image[0]);
-
-            if (file) {
-                const fileId = file.$id;
-                data.featuredImage = fileId;
-                const date = new Date();
-                const dbPost = await appwriteService.createPost({
+                const dbPost = await appwriteService.updatePost(post.$id, {
                     ...data,
-                    userId: userData.userData.$id,
-                    authorName: userData.userData.name,
-                    createdDate: date.toLocaleDateString(),
+                    featuredImage: file ? file.$id : undefined,
                 });
 
                 if (dbPost) {
-                    message = "Post created successfully!";
-                    urlToNavigate = `/post/${dbPost.$id}`;
+                    setModalMessage("Post updated successfully!");
+                    setModalOpen(true);
+                    setTimeout(() => navigate(`/post/${dbPost.$id}`), 2000); // Delay navigation
+                }
+            } else {
+                const file = await appwriteService.uploadFile(data.image[0]);
+
+                if (file) {
+                    const fileId = file.$id;
+                    data.featuredImage = fileId;
+                    const date = new Date();
+                    const dbPost = await appwriteService.createPost({
+                        ...data,
+                        userId: userData.userData.$id,
+                        authorName: userData.userData.name,
+                        createdDate: date.toLocaleDateString(),
+                    });
+
+                    if (dbPost) {
+                        setModalMessage("Post created successfully!");
+                        setModalOpen(true);
+                        setTimeout(() => navigate(`/post/${dbPost.$id}`), 2000); // Delay navigation
+                    }
                 }
             }
-        }
-
-        // Show modal if message is set
-        if (message) {
-            setModalMessage(message);
-            setRedirectUrl(urlToNavigate);
-            setModalVisible(true);
+        } catch (error) {
+            console.error(error);
+            setModalMessage("An error occurred while saving the post.");
+            setModalOpen(true);
         }
     };
 
@@ -91,35 +89,22 @@ export default function PostForm({ post }) {
         return () => subscription.unsubscribe();
     }, [watch, slugTransform, setValue]);
 
-    const closeModal = () => {
-        setModalVisible(false);
-        setModalMessage("");
-
-        // Navigate to the redirect URL after closing the modal
-        if (redirectUrl) {
-            navigate(redirectUrl);
-            setRedirectUrl(""); // Clear the redirect URL
-        }
-    };
-
     return (
         <>
-            {/* Modal Component */}
-            {isModalVisible && (
-                <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
-                        <h2 className="text-xl font-semibold mb-4">Notification</h2>
-                        <p>{modalMessage}</p>
+            {isModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white rounded-lg shadow-lg max-w-sm w-full mx-4 p-6">
+                        <h2 className="text-lg font-semibold mb-4">Notification</h2>
+                        <p className="mb-4">{modalMessage}</p>
                         <button
-                            onClick={closeModal}
-                            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                            onClick={() => setModalOpen(false)}
+                            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                         >
                             Close
                         </button>
                     </div>
                 </div>
             )}
-
             <form onSubmit={handleSubmit(submit)} className="flex flex-wrap">
                 <div className="w-full sm:w-2/3 px-2">
                     <Input
