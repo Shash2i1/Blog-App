@@ -11,7 +11,10 @@ function PostCard({ post }) {
     const { $id, title, featuredImage,authorName , createdDate } = post;
 
     const filePreviewUrl = featuredImage ? appwriteService.getFilePreview(featuredImage) : null;
+
     //console.log(filePreviewUrl)
+    console.log("file url:",filePreviewUrl);
+
     return (
         <Link to={`/post/${$id}`}>
             <div className='w-full  hover:bg-[#FF401A] hover:text-white bg-white text-black rounded-xl p-4 border-2 shadow-xl duration-200 '>
