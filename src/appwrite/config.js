@@ -132,6 +132,45 @@ export class Service{
             fileId
         )
     }
+
+     // Like functionality
+     async toggleLike(postId, userId) {
+        try {
+            const likeDocuments = await this.databases.listDocuments(
+                conf.appwriteDatabaseId,
+                conf.appwriteLikesCollectionId,
+                [Query.equal("postId", postId), Query.equal("userId", userId)]
+            );
+
+            if (likeDocuments.total > 0) {
+                const likeId = likeDocuments.documents[0].$id;
+                // If the like exists, remove it
+                await this.databases.deleteDocument(
+                    conf.appwriteDatabaseId,
+                    conf.appwriteLikesCollectionId,
+                    likeId
+                );
+                return { liked: false }; // The like was removed
+            } else {
+                // If it doesn't exist, create a new like
+                await this.databases.createDocument(
+                    conf.appwriteDatabaseId,
+                    conf.appwriteLikesCollectionId,
+                    ID.unique(),
+                    {
+                        postId,
+                        userId,
+                        status: true,
+                    }
+                );
+                return { liked: true }; // The like was added
+            }
+        } catch (error) {
+            console.log("Appwrite service :: toggleLike :: error", error);
+            throw error; // Rethrow the error for further handling
+        }
+    }
+    
 }
 
 

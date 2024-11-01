@@ -13,7 +13,7 @@ function Signup() {
     const { register, handleSubmit, formState: { errors } } = useForm();
 
     const create = async (data) => {
-        setError("");
+        setError(""); // Clear any existing error before starting the signup process
         try {
             const userData = await authService.createAccount(data);
             if (userData) {
@@ -24,13 +24,17 @@ function Signup() {
                 }
             }
         } catch (error) {
-            setError(error.message);
+            if (error.code === 409) {
+                setError("An account with this email already exists. Please use a different email.");
+            } else {
+                setError("An error occurred while creating the account. Please try again.");
+            }
         }
     };
 
     return (
         <div className="flex items-center justify-center">
-            <div className={`mx-auto w-full max-w-lg shadow-2xl bg-white rounded-xl p-10 border border-black/10`}>
+            <div className="mx-auto w-full max-w-lg shadow-2xl bg-white rounded-xl p-10 border border-black/10">
                 <div className="mb-2 flex justify-center">
                     <span className="inline-block w-full max-w-[100px]">
                         <Logo width="100%" />

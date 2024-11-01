@@ -8,6 +8,7 @@ import { useSelector } from "react-redux";
 export default function PostForm({ post }) {
     const [isModalOpen, setModalOpen] = useState(false);
     const [modalMessage, setModalMessage] = useState('');
+    const [isLoading, setIsLoading] = useState(false); // Loader state
 
     const { register, handleSubmit, watch, setValue, control, getValues } = useForm({
         defaultValues: {
@@ -22,27 +23,31 @@ export default function PostForm({ post }) {
     const userData = useSelector((state) => state.auth.userData);
 
     const submit = async (data) => {
+        setIsLoading(true); // Set loading to true
         try {
             if (post) {
                 const file = data.image[0] ? await appwriteService.uploadFile(data.image[0]) : null;
-
+    
                 if (file) {
-                    appwriteService.deleteFile(post.featuredImage);
+                    await appwriteService.deleteFile(post.featuredImage); // Ensure this is awaited
                 }
-
+    
                 const dbPost = await appwriteService.updatePost(post.$id, {
                     ...data,
                     featuredImage: file ? file.$id : undefined,
                 });
-
+    
                 if (dbPost) {
                     setModalMessage("Post updated successfully!");
                     setModalOpen(true);
-                    setTimeout(() => navigate(`/post/${dbPost.$id}`), 2000); // Delay navigation
+                    setTimeout(() => {
+                        navigate(`/post/${dbPost.$id}`); // Delay navigation
+                        setIsLoading(false); // Set loading to false before navigation
+                    }, 2000); 
                 }
             } else {
                 const file = await appwriteService.uploadFile(data.image[0]);
-
+    
                 if (file) {
                     const fileId = file.$id;
                     data.featuredImage = fileId;
@@ -53,11 +58,14 @@ export default function PostForm({ post }) {
                         authorName: userData.userData.name,
                         createdDate: date.toLocaleDateString(),
                     });
-
+    
                     if (dbPost) {
                         setModalMessage("Post created successfully!");
                         setModalOpen(true);
-                        setTimeout(() => navigate(`/post/${dbPost.$id}`), 2000); // Delay navigation
+                        setTimeout(() => {
+                            navigate(`/post/${dbPost.$id}`); // Delay navigation
+                            setIsLoading(false); // Set loading to false before navigation
+                        }, 2000); 
                     }
                 }
             }
@@ -65,8 +73,13 @@ export default function PostForm({ post }) {
             console.error(error);
             setModalMessage("An error occurred while saving the post.");
             setModalOpen(true);
+        } finally {
+            if (!isLoading) {
+                setIsLoading(false); // Ensure loading is set to false if it hasn't been already
+            }
         }
     };
+    
 
     const slugTransform = useCallback((value) => {
         if (value && typeof value === "string")
@@ -148,7 +161,17 @@ export default function PostForm({ post }) {
                         {...register("status", { required: true })}
                     />
                     <Button type="submit" bgColor={post ? "bg-green-500" : undefined} className="w-full">
-                        {post ? "Update" : "Post"}
+                        {isLoading ? ( // Loader condition
+                            <div className="flex items-center justify-center">
+                                <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" fill="none" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v2a6 6 0 00-6 6H4z" />
+                                </svg>
+                                Submitting...
+                            </div>
+                        ) : (
+                            post ? "Update" : "Post"
+                        )}
                     </Button>
                 </div>
             </form>
