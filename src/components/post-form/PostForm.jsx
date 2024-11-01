@@ -4,6 +4,7 @@ import { Button, Input, RTE, Select } from "..";
 import appwriteService from "../../appwrite/config";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import imageCompression from "browser-image-compression"; // Import the compression library
 
 export default function PostForm({ post }) {
     const [isModalOpen, setModalOpen] = useState(false);
@@ -22,21 +23,41 @@ export default function PostForm({ post }) {
     const navigate = useNavigate();
     const userData = useSelector((state) => state.auth.userData);
 
+    // Compress Image Function
+    const compressImage = async (file) => {
+        const options = {
+            maxSizeMB: 1, // Set maximum size in MB
+            maxWidthOrHeight: 1200, // Max width or height for resized image
+            useWebWorker: true,
+        };
+        try {
+            return await imageCompression(file, options);
+        } catch (error) {
+            console.error("Error during image compression:", error);
+            return file; // Fallback to the original file if compression fails
+        }
+    };
+
     const submit = async (data) => {
         setIsLoading(true); // Set loading to true
         try {
+            let file = null;
+            if (data.image && data.image[0]) {
+                // Compress image before uploading
+                file = await compressImage(data.image[0]);
+                file = new File([file], data.image[0].name, { type: data.image[0].type }); // Ensure it's a File object
+            }
+
             if (post) {
-                const file = data.image[0] ? await appwriteService.uploadFile(data.image[0]) : null;
-    
                 if (file) {
                     await appwriteService.deleteFile(post.featuredImage); // Ensure this is awaited
                 }
-    
+
                 const dbPost = await appwriteService.updatePost(post.$id, {
                     ...data,
                     featuredImage: file ? file.$id : undefined,
                 });
-    
+
                 if (dbPost) {
                     setModalMessage("Post updated successfully!");
                     setModalOpen(true);
@@ -46,27 +67,26 @@ export default function PostForm({ post }) {
                     }, 2000); 
                 }
             } else {
-                const file = await appwriteService.uploadFile(data.image[0]);
-    
                 if (file) {
-                    const fileId = file.$id;
-                    data.featuredImage = fileId;
-                    const date = new Date();
-                    const dbPost = await appwriteService.createPost({
-                        ...data,
-                        userId: userData.userData.$id,
-                        authorName: userData.userData.name,
-                        createdDate: date.toLocaleDateString(),
-                    });
-    
-                    if (dbPost) {
-                        setModalMessage("Post created successfully!");
-                        setModalOpen(true);
-                        setTimeout(() => {
-                            navigate(`/post/${dbPost.$id}`); // Delay navigation
-                            setIsLoading(false); // Set loading to false before navigation
-                        }, 2000); 
-                    }
+                    const fileId = await appwriteService.uploadFile(file); // Upload compressed file
+                    data.featuredImage = fileId.$id;
+                }
+
+                const date = new Date();
+                const dbPost = await appwriteService.createPost({
+                    ...data,
+                    userId: userData.userData.$id,
+                    authorName: userData.userData.name,
+                    createdDate: date.toLocaleDateString(),
+                });
+
+                if (dbPost) {
+                    setModalMessage("Post created successfully!");
+                    setModalOpen(true);
+                    setTimeout(() => {
+                        navigate(`/post/${dbPost.$id}`); // Delay navigation
+                        setIsLoading(false); // Set loading to false before navigation
+                    }, 2000); 
                 }
             }
         } catch (error) {
@@ -74,12 +94,9 @@ export default function PostForm({ post }) {
             setModalMessage("An error occurred while saving the post.");
             setModalOpen(true);
         } finally {
-            if (!isLoading) {
-                setIsLoading(false); // Ensure loading is set to false if it hasn't been already
-            }
+            setIsLoading(false); // Ensure loading is set to false if it hasn't been already
         }
     };
-    
 
     const slugTransform = useCallback((value) => {
         if (value && typeof value === "string")
