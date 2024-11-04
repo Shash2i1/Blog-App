@@ -73,11 +73,14 @@ export default function PostForm({ post }) {
                 }
 
                 const date = new Date();
+                const month_list = ['Jan','Feb','March','April','May','Jun','July','Aug','Sep','Oct','Nov','Dec']
+                const month = month_list.at(date.getMonth())
+                
                 const dbPost = await appwriteService.createPost({
                     ...data,
                     userId: userData.userData.$id,
                     authorName: userData.userData.name,
-                    createdDate: date.toLocaleDateString(),
+                    createdDate: `${date.getDate()}, ${month} ${date.getFullYear()}`,
                 });
 
                 if (dbPost) {
@@ -184,7 +187,7 @@ export default function PostForm({ post }) {
                                     <circle className="opacity-25" cx="12" cy="12" r="10" fill="none" />
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v2a6 6 0 00-6 6H4z" />
                                 </svg>
-                                Submitting...
+                                Posting...
                             </div>
                         ) : (
                             post ? "Update" : "Post"
