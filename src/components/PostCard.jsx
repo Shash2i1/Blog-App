@@ -1,14 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import appwriteService from "../appwrite/config";
 import { Link } from 'react-router-dom';
-import LikeButton from './LikeButton'; // Ensure the path to LikeButton is correct
+import LikeButton from './LikeButton';
+import CommentsSection from './Comments';
 
 function PostCard({ post }) {
+    // Check if the post is undefined or null
     if (!post) {
-        return null;
+        return null; // Return null to prevent rendering when post is not available
     }
 
-    const { $id, title, featuredImage, authorName, createdDate, likesCount } = post; // Ensure likesCount is part of the post object
+    const [showComments, setShowComments] = useState(false);
+    
+    const { $id, title, featuredImage, authorName, createdDate, likesCount } = post;
     const filePreviewUrl = featuredImage ? appwriteService.getFilePreview(featuredImage) : null;
 
     return (
@@ -16,7 +20,7 @@ function PostCard({ post }) {
             <Link to={`/post/${$id}`}>
                 <div className='w-full justify-center mb-4 py-5'>
                     <div className='flex flex-col w-full h-auto mb-2 lg:text-[15px] p-2 sm:text-[10px] py-2'>
-                        <h4><span className='text-green-400'>Author :</span>{authorName} </h4>
+                        <h4><span className='text-green-400'>Author :</span>{authorName}</h4>
                         <h4><span className='text-green-400'>Created:</span>{createdDate}</h4>
                     </div>
                     {filePreviewUrl ? (
@@ -29,7 +33,23 @@ function PostCard({ post }) {
                 </div>
                 <h2 className='text-xl font-bold'>{title}</h2>
             </Link>
-            <LikeButton postId={$id} initialLikesCount={likesCount || 0} />
+            <div className='flex items-center justify-between mt-4'> {/* Use justify-between for spacing */}
+                <LikeButton postId={$id} initialLikesCount={likesCount || 0} />
+                <button
+                    onClick={() => setShowComments(prev => !prev)} // Toggle comments visibility
+                    className="text-gray-600 hover:text-gray-800"
+                >
+                    💬 {/* This is the comment icon */}
+                </button>
+            </div>
+            {showComments && (
+                <div className="mt-4"> {/* Add some margin above comments section */}
+                    <CommentsSection
+                        postId={$id}
+                        closeModal={() => setShowComments(false)}
+                    />
+                </div>
+            )}
         </div>
     );
 }
