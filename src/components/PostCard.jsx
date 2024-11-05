@@ -3,6 +3,7 @@ import appwriteService from "../appwrite/config";
 import { Link } from 'react-router-dom';
 import LikeButton from './LikeButton';
 import CommentsSection from './Comments';
+import CommentLogo from './commentLogo';
 
 function PostCard({ post }) {
     // Check if the post is undefined or null
@@ -39,7 +40,7 @@ function PostCard({ post }) {
                     onClick={() => setShowComments(prev => !prev)} // Toggle comments visibility
                     className="text-gray-600 hover:text-gray-800"
                 >
-                    💬 {/* This is the comment icon */}
+                    <CommentLogo/> {/* This is the comment icon */}
                 </button>
             </div>
             {showComments && (
