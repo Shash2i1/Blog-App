@@ -20,9 +20,6 @@ A **full-stack blogging platform** built with **React, Redux, Appwrite**, and **
 - **Text Editor:** TinyMCE API  
 - **Deployment:** Vercel  
 
-## 📸 Screenshots  
-
-_(Add some screenshots of your app here to showcase its design and functionality.)_  
 
 ## 🔗 Live Demo  
 
