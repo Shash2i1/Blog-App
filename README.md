@@ -1,8 +1,36 @@
-# React + Vite
+# PenPath Blog App 📝  
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A **full-stack blogging platform** built with **React, Redux, Appwrite**, and **Tailwind CSS**. Users can create, edit, and like blog posts with a seamless and modern UI.  
 
-Currently, two official plugins are available:
+## 🚀 Features  
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **User Authentication:** Secure login and registration using **Appwrite Authentication API**.  
+- **Post Management:** Create, edit, and delete blog posts with **Appwrite Database API**.  
+- **Rich Text Editing:** Integrated **TinyMCE API** for a smooth writing experience.  
+- **Like Button:** Users can like/unlike posts dynamically using **Appwrite Database API**.  
+- **Responsive UI:** Built with **Tailwind CSS**, ensuring mobile-friendly design.  
+- **Sticky Header:** Navigation remains accessible on scroll.  
+- **Deployment:** Hosted on **Vercel** for fast and reliable performance.  
+
+## 🛠️ Technologies Used  
+
+- **Frontend:** React, Redux, Vite  
+- **Backend & Database:** Appwrite (Authentication & Database APIs)  
+- **Styling:** Tailwind CSS  
+- **Text Editor:** TinyMCE API  
+- **Deployment:** Vercel  
+
+## 📸 Screenshots  
+
+_(Add some screenshots of your app here to showcase its design and functionality.)_  
+
+## 🔗 Live Demo  
+
+[🌍 PenPath Blog App](https://penpath-blog-app.vercel.app/)  
+
+## 📂 Installation & Setup  
+
+1. Clone the repository:  
+   ```sh
+   git clone https://github.com/Shash2i1/Blog-App.git
+   cd Blog-App
